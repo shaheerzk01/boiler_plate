@@ -1,8 +1,16 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+"use client";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import Header from "@/components/header";
 
 export default function Home() {
-  return (
-    <div className="font-bold text-amber-400">Boiler Plate</div>
-  );
+  const router = useRouter();
+
+  useEffect(() => {
+    router.push("/login");
+  }, [router]);
+
+  return null; 
+
+ 
 }
