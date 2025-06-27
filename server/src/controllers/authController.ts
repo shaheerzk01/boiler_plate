@@ -98,6 +98,30 @@ export const verifyOtp = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
+export const getOtpWaitTime = async (req: Request, res: Response): Promise<void> => {
+  const { userId } = req.body;
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      res.status(404).json({ message: "User not found" });
+      return;
+    }
+
+    const now = new Date();
+    const canResendAt = user.otpLastSentAt
+      ? new Date(user.otpLastSentAt.getTime() + 30 * 1000)
+      : new Date(0);
+
+    const waitTime = Math.max(0, Math.ceil((canResendAt.getTime() - now.getTime()) / 1000));
+
+    res.status(200).json({ waitTime });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch OTP wait time", error });
+  }
+};
+
+
 export const resendOtp = async (req: Request, res: Response): Promise<void> => {
   const { userId } = req.body;
 
@@ -115,15 +139,15 @@ export const resendOtp = async (req: Request, res: Response): Promise<void> => {
       ? new Date(user.otpLastSentAt.getTime() + 30 * 1000) // 30 seconds
       : new Date(0);
 
-    if (now < canResendAt) {
-      const waitTime = Math.ceil(
-        (canResendAt.getTime() - now.getTime()) / 1000
-      );
-      res.status(429).json({
-        message: `Please wait ${waitTime} seconds before resending OTP.`,
-      });
-      return;
-    }
+      if (now < canResendAt) {
+        const waitTime = Math.ceil((canResendAt.getTime() - now.getTime()) / 1000);
+        res.status(429).json({
+          message: "Please wait before resending OTP.",
+          waitTime, 
+        });
+        return;
+      }
+      
 
     const newOtp = Math.floor(1000 + Math.random() * 9000).toString();
     const newExpiry = new Date(now.getTime() + 2 * 60 * 1000);
@@ -189,13 +213,14 @@ export const logoutUser = async (req: Request, res: Response): Promise<void> => 
   }
 
   const token = authHeader.split(' ')[1];
-  addToBlacklist(token); 
+  addToBlacklist(token);
 
   res.status(200).json({ message: 'Logout successful' });
-}
+};
+
 
 export const deleteUser = async (req: Request, res: Response): Promise<void> => {
-  const { userId } = req.body;
+  const { userId } = req.params; 
 
   try {
     const user = await User.findByIdAndDelete(userId);
@@ -209,4 +234,5 @@ export const deleteUser = async (req: Request, res: Response): Promise<void> => 
   } catch (error) {
     res.status(500).json({ message: "Failed to delete user", error });
   }
-}
+};
+

@@ -2,6 +2,10 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { blacklistedTokens } from "../utils/tokenBlacklist";
 
+const JWT_SECRET =
+  "8569f9f588732049cf1b865aeac62c9c0deb07fab4ee19dd30e77876ec987714adeea3bbb0f08a2b8ba08702a10f91ce98f97a007531b15996b79b3653bc0627";
+
+
 export const authMiddleware = (
   req: Request,
   res: Response,
@@ -24,7 +28,7 @@ export const authMiddleware = (
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!);
+    const decoded = jwt.verify(token, JWT_SECRET!);
     (req as any).user = decoded;
     next();
   } catch (error) {
