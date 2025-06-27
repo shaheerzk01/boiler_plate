@@ -1,28 +1,32 @@
-"use client"
-import React, {useState} from 'react'
-import { useRouter } from 'next/navigation'
-import { loginUser } from '@/api/auth'
+"use client";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { loginUser } from "@/api/auth";
+import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 
 const Login = () => {
-
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  useAuthRedirect();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       const data = await loginUser(email, password);
 
-      localStorage.setItem('token', data.token);
+      document.cookie = `token=${data.token}; path=/; max-age=86400`;
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("userId", data.user.id);
 
-      router.push('/dashboard'); 
+      router.push("/dashboard");
     } catch (err) {
-      setError('Login failed. Please check your credentials.');
+      setError("Login failed. Please check your credentials.");
     }
-  }
+  };
   return (
     <div className="h-full flex flex-col items-center justify-center text-black p-4">
       <form
@@ -54,9 +58,17 @@ const Login = () => {
         >
           Login
         </button>
+        <div className="mt-4 text-center">
+          <p className="mt-4 text-sm text-gray-600">
+            Don't have an account?{" "}
+            <a href="/register" className="text-blue-500 hover:underline">
+              Register
+            </a>
+          </p>
+        </div>
       </form>
     </div>
-  )
-}
+  );
+};
 
-export default Login
+export default Login;
